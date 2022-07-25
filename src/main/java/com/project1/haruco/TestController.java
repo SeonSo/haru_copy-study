@@ -12,12 +12,16 @@ public class TestController {
     public String test() {
         System.out.println("테스트임");
         return "테스트합니다!!!";
-
     }
-
     @RequestMapping("/index")
     @ResponseBody
     public String index() {
         return "index";
+    }
+
+    @RequestMapping("/SeonSo")
+    @ResponseBody
+    public String SeonSoHomeTest() {
+        return "소선호 HomeTest 확인";
     }
 }
