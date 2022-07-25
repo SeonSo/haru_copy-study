@@ -14,4 +14,10 @@ public class TestController {
         return "테스트!!!!";
 
     }
+
+    @RequestMapping("/index")
+    @ResponseBody
+    public String index() {
+        return "index";
+    }
 }
