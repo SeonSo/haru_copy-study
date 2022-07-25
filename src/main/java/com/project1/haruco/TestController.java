@@ -11,7 +11,7 @@ public class TestController {
     @RequestMapping("/test")
     public String test() {
         System.out.println("테스트임");
-        return "테스트!";
+        return "테스트합니다!";
 
     }
 
