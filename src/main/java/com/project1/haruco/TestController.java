@@ -30,4 +30,10 @@ public class TestController {
     public String yeonJiTest() {
         return "연지 HomeTest 확인";
     }
+
+    @RequestMapping("/yoya")
+    @ResponseBody
+    public String YoYaTest() {
+        return "용규 HomeTest 확인";
+    }
 }
