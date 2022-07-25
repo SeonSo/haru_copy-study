@@ -36,4 +36,10 @@ public class TestController {
     public String YoYaTest() {
         return "용규 HomeTest 확인";
     }
+
+    @RequestMapping("/daehan")
+    @ResponseBody
+    public String daehan(){
+        return "대한 HoneTest 확인";
+    }
 }
