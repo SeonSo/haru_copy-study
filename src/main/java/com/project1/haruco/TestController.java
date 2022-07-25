@@ -24,4 +24,10 @@ public class TestController {
     public String SeonSoHomeTest() {
         return "소선호 HomeTest 확인";
     }
+
+    @RequestMapping("/yeonji")
+    @ResponseBody
+    public String yeonJiTest() {
+        return "연지 HomeTest 확인";
+    }
 }
