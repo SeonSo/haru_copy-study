@@ -1,6 +1,7 @@
 package com.project1.haruco.web.domain.posting;
 
 import com.project1.haruco.web.domain.challenge.Challenge;
+import com.project1.haruco.web.domain.member.Member;
 import lombok.Getter;
 
 import javax.persistence.*;
