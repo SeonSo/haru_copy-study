@@ -10,6 +10,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 @Slf4j
 @RequiredArgsConstructor
 @RestController
@@ -19,16 +21,19 @@ public class PostingController {
 
     //저장
     @PostMapping("")
-    public ResponseEntity<Long> createPosting(@RequestBody PostingRequestDto postingRequestDto){
-        log.info("postingRequestDto : {} ",postingRequestDto);
-        return ResponseEntity.ok().body(postingService.createPosting(postingRequestDto));
+    public Long createPosting(@RequestBody @Valid PostingCreateRequestDto postingRequestDto,
+                              @AuthenticationPrincipal UserDetails userDetails) {
+        log.info("createPosting 포스트 저장: {} ", postingRequestDto);
+        String email = userDetails.getUsername();
+        return postingService.createPosting(postingRequestDto, email);
     }
 
     //리스트
     @GetMapping("/{page}/{challengeId}")
-    public ResponseEntity<Long<PostingResponseDto>> getPosting(@PathVariable int page,
-                                                               @PathVariable Long challengeId){
-        return ResponseEntity.ok().body(postingService.getPosting(page, challengeId));
+    public PostingListDto getPosting(@PathVariable int page,
+                                     @PathVariable Long challengeId) {
+        log.info("getPosting 전체 포스트 리스트 : {} ", challengeId);
+        return postingService.getPosting(page, challengeId);
     }
 
     //업데이트
@@ -42,11 +47,11 @@ public class PostingController {
     }
 
     //삭제
-    @PutMapping("/delete/{postingId}")
-    public ResponseEntity<Long> deletePosting(@PathVariable Long postingId,
-                                              @AuthenticationPrincipal UserDetails userDetails){
+    @DeleteMapping("/delete/{postingId}")
+    public Long deletePosting(@PathVariable Long postingId,
+                              @AuthenticationPrincipal UserDetails userDetails) {
+        log.info("deletePosting 포스트 삭제: {} ", postingId);
         String email = userDetails.getUsername();
-
-        return ResponseEntity.ok().body(postingService.deletePosting(postingId, email));
+        return postingService.deletePosting(postingId, email);
     }
 }

@@ -6,6 +6,7 @@ import com.project1.haruco.web.domain.certification.CertificationRepository;
 import com.project1.haruco.web.domain.challengeRecord.ChallengeRecordRepository;
 import com.project1.haruco.web.domain.member.Member;
 import com.project1.haruco.web.domain.member.MemberRepository;
+import com.project1.haruco.web.domain.point.Point;
 import com.project1.haruco.web.domain.point.PointRepository;
 import com.project1.haruco.web.domain.posting.Posting;
 import com.project1.haruco.web.domain.posting.PostingRepository;
