@@ -28,3 +28,15 @@ logging:
         type:
           descriptor:
             sql: trace
+jwt:
+  header: Authorization
+  token-validity-in-seconds: '86400'
+  secret: c2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQtc2lsdmVybmluZS10ZWNoLXNwcmluZy1ib290LWp3dC10dXRvcmlhbC1zZWNyZXQK
+spring:
+  h2:
+    console:
+      enabled: 'true'
+  datasource:
+    url: jdbc:h2:mem:springcoredb
+  jpa:
+    show-sql: 'true'

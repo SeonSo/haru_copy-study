@@ -1,12 +1,11 @@
 package com.project1.haruco.web.domain.certification;
 
 import com.project1.haruco.web.domain.member.Member;
+import com.project1.haruco.web.domain.posting.Posting;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
-import javax.swing.*;
-import java.lang.reflect.Member;
 
 @Entity
 @Getter
@@ -29,8 +28,9 @@ public class Certification {
     }
 
     public static Certification createCertification(Member member, Posting posting) {
-        Certification certification = new Certification(member, posting);
+        Certification certification =new Certification(member,posting);
         posting.addCount();
         return certification;
     }
+
 }

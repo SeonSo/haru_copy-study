@@ -1,6 +1,8 @@
 package com.project1.haruco.web.domain.point;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.project1.haruco.web.domain.certification.Certification;
+import com.project1.haruco.web.domain.commom.Timestamped;
 import com.project1.haruco.web.domain.member.Member;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,8 +14,7 @@ import javax.persistence.*;
 @Getter
 @Entity
 @NoArgsConstructor
-
-public class Point extends Timestamped{
+public class Point extends Timestamped {
 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
@@ -22,7 +23,9 @@ public class Point extends Timestamped{
     @Column
     private Long acquiredPoint;
 
+    // 애가관계의주인임 관계의주인쪽이 관계가설정되는것
     @ManyToOne
+    @JsonIgnore
     private Member member;
 
     @ManyToOne

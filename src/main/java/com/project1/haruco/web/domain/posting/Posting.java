@@ -2,7 +2,8 @@ package com.project1.haruco.web.domain.posting;
 
 import com.project1.haruco.web.domain.challenge.Challenge;
 import com.project1.haruco.web.domain.member.Member;
-import com.project1.haruco.web.dto.response.posting.PostingRequestDto;
+import com.project1.haruco.web.domain.commom.Timestamped;
+import com.project1.haruco.web.dto.request.posting.PostingRequestDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,16 +15,16 @@ import javax.persistence.*;
 @Entity
 @NoArgsConstructor
 @ToString
+public class Posting extends Timestamped {
 
-public class Posting extends Timestamped{
-    @Id
+
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-
+    @Id
     private Long postingId;
     @Column
-    private String postingId;
-    @Column
     private String postingImg;
+    @Column
+    private String postingContent;
     @Column
     private boolean postingStatus;
     @Column
@@ -37,6 +38,7 @@ public class Posting extends Timestamped{
 
     @ManyToOne
     private Member member;
+
     @ManyToOne
     private Challenge challenge;
 
@@ -53,6 +55,7 @@ public class Posting extends Timestamped{
         this.challenge=challenge;
     }
 
+    //==생성 메서드==//
     public static Posting createPosting(PostingRequestDto postingRequestDto, Member member, Challenge challenge) {
         return new Posting(
                 postingRequestDto.getPostingImg(),
@@ -61,6 +64,8 @@ public class Posting extends Timestamped{
                 challenge
         );
     }
+
+    //== 비지니스 로직 ==//
     public void updatePosting(PostingRequestDto postingRequestDto) {
         this.postingImg = postingRequestDto.getPostingImg();
         this.postingContent = postingRequestDto.getPostingContent();
@@ -69,8 +74,8 @@ public class Posting extends Timestamped{
     public void deletePosting() {
         this.postingStatus =false;
     }
+
     public void addCount() {
         this.postingCount += 1;
     }
-
 }

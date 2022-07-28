@@ -7,10 +7,10 @@ import lombok.ToString;
 
 import java.time.LocalDateTime;
 
-@Getter
-@ToString
 @NoArgsConstructor
-public class PostingRequestDto {
+@ToString
+@Getter
+public class PostingResponseDto {
 
     private Long postingId;
     private String postingImg;
@@ -18,6 +18,7 @@ public class PostingRequestDto {
     private Long postingCount;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
+
 
     public PostingResponseDto(Posting posting) {
         this.postingContent = posting.getPostingContent();
