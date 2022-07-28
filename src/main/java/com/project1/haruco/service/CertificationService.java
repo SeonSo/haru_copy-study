@@ -1,10 +1,17 @@
 package com.project1.haruco.service;
 
+import com.project1.haruco.exception.ApiRequestException;
 import com.project1.haruco.web.domain.certification.Certification;
 import com.project1.haruco.web.domain.certification.CertificationRepository;
+import com.project1.haruco.web.domain.challengeRecord.ChallengeRecordRepository;
 import com.project1.haruco.web.domain.member.Member;
+import com.project1.haruco.web.domain.member.MemberRepository;
+import com.project1.haruco.web.domain.point.PointRepository;
+import com.project1.haruco.web.domain.posting.Posting;
+import com.project1.haruco.web.domain.posting.PostingRepository;
 import com.project1.haruco.web.dto.request.certification.CertificationRequestDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;

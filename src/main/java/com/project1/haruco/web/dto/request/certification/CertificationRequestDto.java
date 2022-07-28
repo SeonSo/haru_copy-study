@@ -7,5 +7,4 @@ import lombok.ToString;
 @ToString
 public class CertificationRequestDto {
     private Long postingId;
-    private Long memberId;
 }
