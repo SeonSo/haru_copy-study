@@ -14,10 +14,11 @@ public class MyPageResponseDto {
     private String profileImg;
     private Long point; // 이게문제군...
 
+
     public MyPageResponseDto(Member member, Long totalPoint){
         this.memberId = member.getMemberId();
-        this.password = member.getPassword();
         this.nickname = member.getNickname();
+        this.password = member.getPassword();
         this.profileImg = member.getProfileImg();
         this.point = totalPoint;
     }

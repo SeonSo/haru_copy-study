@@ -4,15 +4,22 @@ import com.project1.haruco.exception.ApiRequestException;
 import lombok.Getter;
 import lombok.Setter;
 
+<<<<<<< HEAD
 @Setter
 @Getter
 public class SignupRequestDto {
 
+=======
+@Getter
+@Setter
+public class SignupRequestDto {
+>>>>>>> 3308a580f000088f67fcc06991bf72eac2e3132f
     private String email;
     private String nickname;
     private String password;
     private String passwordConfirm;
     private String profileImg;
+<<<<<<< HEAD
 
 
     public SignupRequestDto(String email,  String password, String nickname, String passwordConfirm,
@@ -37,6 +44,25 @@ public class SignupRequestDto {
 
         if ( !(password.equals(passwordConfirm))){
             throw new ApiRequestException("비밀번호가 서로같지않습니다.");
+=======
+    private Long memberStatus;
+
+    public SignupRequestDto(String email, String nickname,
+                            String password, String passwordConfirm,
+                            String profileImg){
+        if(email.isEmpty()){
+            throw new ApiRequestException("email(ID)를 입력해주세요.");
+        } if(!email.matches(("^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$"))){
+            throw new ApiRequestException("올바른 이메일 형식이 아닙니다.");
+        }
+
+        if(password.isEmpty() || passwordConfirm.isEmpty()){
+            throw new ApiRequestException("패스워드를 입력해주세요.");
+        } if(password.length() < 4 || password.length() >20){
+            throw new ApiRequestException("비밀번호는 4~20자리만 사용 가능합니다.");
+        } if(!(password.equals(passwordConfirm))){
+            throw new ApiRequestException("확인 비밀번호가 틀렸습니다.");
+>>>>>>> 3308a580f000088f67fcc06991bf72eac2e3132f
         }
 
         this.email = email;
@@ -44,5 +70,9 @@ public class SignupRequestDto {
         this.password = password;
         this.passwordConfirm = passwordConfirm;
         this.profileImg = profileImg;
+<<<<<<< HEAD
+=======
+        this.memberStatus = 1L;
+>>>>>>> 3308a580f000088f67fcc06991bf72eac2e3132f
     }
 }

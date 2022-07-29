@@ -97,7 +97,7 @@ public class MemberService {
 
     // 토큰 재발급
     @Transactional
-    public TokenDto reissue(TokenRequestDto tokenRequestDto) {
+    public TokenDto reissue(com.project1.haruco.web.dto.request.Token.TokenRequestDto tokenRequestDto) {
         // 1. Refresh Token 검증
         if (!tokenProvider.validateToken(tokenRequestDto.getRefreshToken())) {
             throw new RuntimeException("Refresh Token 이 유효하지 않습니다.");

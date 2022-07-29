@@ -50,7 +50,7 @@ public class ChallengeService {
         return new ChallengeResponseDto(challenge, challengeMember);
     }
 
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public Map<String, String> deleteChallenge(Long challengeId, String username) {
         Challenge challenge = challengeRepository.findById(challengeId).orElseThrow(
                 () -> new NullPointerException("존재하지 않은 챌린지id입니다"));
@@ -76,7 +76,7 @@ public class ChallengeService {
         return deleteResultMap;
     }
 
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public void createChallenge(ChallengeRequestDto requestDto, String email) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new NullPointerException("존재하지 않는 유저입니다."));
@@ -93,7 +93,7 @@ public class ChallengeService {
         challengeRecordRepository.save(new ChallengeRecord(challenge, member));
     }
 
-    @org.springframework.transaction.annotation.Transactional
+    @Transactional
     public void putChallenge(PutChallengeRequestDto requestDto, String username) {
         Member member = memberRepository.findByEmail(username)
                 .orElseThrow(() -> new NullPointerException("존재하지 않는 유저입니다."));
