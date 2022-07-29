@@ -3,6 +3,7 @@ package com.project1.haruco.web.domain.posting;
 import com.project1.haruco.web.domain.challenge.Challenge;
 import com.project1.haruco.web.domain.member.Member;
 import com.project1.haruco.web.domain.commom.Timestamped;
+import com.project1.haruco.web.dto.request.posting.PostingCreateRequestDto;
 import com.project1.haruco.web.dto.request.posting.PostingRequestDto;
 import lombok.Builder;
 import lombok.Getter;
@@ -56,7 +57,7 @@ public class Posting extends Timestamped {
     }
 
     //==생성 메서드==//
-    public static Posting createPosting(PostingRequestDto postingRequestDto, Member member, Challenge challenge) {
+    public static Posting createPosting(PostingCreateRequestDto postingRequestDto, Member member, Challenge challenge) {
         return new Posting(
                 postingRequestDto.getPostingImg(),
                 postingRequestDto.getPostingContent(),

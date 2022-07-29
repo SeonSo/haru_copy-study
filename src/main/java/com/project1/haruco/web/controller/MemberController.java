@@ -2,7 +2,7 @@ package com.project1.haruco.web.controller;
 
 import com.project1.haruco.service.MemberService;
 import com.project1.haruco.web.dto.request.login.LoginRequestDto;
-import com.project1.haruco.web.dto.request.mypage.MyPageRequestDto;
+import com.project1.haruco.web.dto.request.mypage.ProfileUpdateRequestDto;
 import com.project1.haruco.web.dto.request.signup.SignupRequestDto;
 import com.project1.haruco.web.dto.request.token.TokenRequestDto;
 import com.project1.haruco.web.dto.response.mypage.MyPageResponseDto;
@@ -49,7 +49,7 @@ public class MemberController {
 
     // 마이 페이지 수정
     @PutMapping("/mypage")
-    public ResponseEntity<Void> updateMyPageInfo(@RequestBody MyPageRequestDto requestDto, @AuthenticationPrincipal UserDetails userDetails){
+    public ResponseEntity<Void> updateMyPageInfo(@RequestBody ProfileUpdateRequestDto requestDto, @AuthenticationPrincipal UserDetails userDetails){
 
         memberService.updateMember(requestDto, userDetails.getUsername());
         return ResponseEntity.ok().build();

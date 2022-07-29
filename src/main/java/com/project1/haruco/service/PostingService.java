@@ -7,7 +7,9 @@ import com.project1.haruco.web.domain.member.Member;
 import com.project1.haruco.web.domain.member.MemberRepository;
 import com.project1.haruco.web.domain.posting.Posting;
 import com.project1.haruco.web.domain.posting.PostingRepository;
+import com.project1.haruco.web.dto.request.posting.PostingCreateRequestDto;
 import com.project1.haruco.web.dto.request.posting.PostingRequestDto;
+import com.project1.haruco.web.dto.request.posting.PostingUpdateRequestDto;
 import com.project1.haruco.web.dto.response.posting.PostingResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +39,7 @@ public class PostingService {
      * 1.포스트 저장
      *
      */
-    public Long createPosting(PostingRequestDto postingRequestDto) {
+    public Long createPosting(PostingCreateRequestDto postingRequestDto, String email) {
         Member member = getMemberById(postingRequestDto.getMemberId());
         Challenge challenge = getChallenge(postingRequestDto.getChallengeId());
         Posting posting = Posting.createPosting(postingRequestDto,member,challenge);
@@ -73,7 +75,7 @@ public class PostingService {
      * 3.포스트 업데이트
      *
      */
-    public Long updatePosting(Long postingId,String email,PostingRequestDto postingRequestDto) {
+    public Long updatePosting(Long postingId, String email, PostingUpdateRequestDto postingRequestDto) {
 
         Member member = getMemberByEmail(email);
         Posting posting = getPosting(postingId);

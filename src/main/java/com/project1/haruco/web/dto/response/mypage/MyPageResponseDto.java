@@ -9,10 +9,10 @@ import lombok.NoArgsConstructor;
 public class MyPageResponseDto {
 
     private Long memberId;
-    private String password; // 이걸왜줌??
+    private String password;
     private String nickname;
     private String profileImg;
-    private Long point; // 이게문제군...
+    private Long point;
 
 
     public MyPageResponseDto(Member member, Long totalPoint){

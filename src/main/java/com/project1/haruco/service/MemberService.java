@@ -8,9 +8,8 @@ import com.project1.haruco.web.domain.point.Point;
 import com.project1.haruco.web.domain.token.RefreshToken;
 import com.project1.haruco.web.domain.token.RefreshTokenRepository;
 import com.project1.haruco.web.dto.request.login.LoginRequestDto;
-import com.project1.haruco.web.dto.request.mypage.MyPageRequestDto;
+import com.project1.haruco.web.dto.request.mypage.ProfileUpdateRequestDto;
 import com.project1.haruco.web.dto.request.signup.SignupRequestDto;
-import com.project1.haruco.web.dto.request.token.TokenRequestDto;
 import com.project1.haruco.web.dto.response.mypage.MyPageResponseDto;
 import com.project1.haruco.web.dto.response.token.TokenDto;
 import lombok.RequiredArgsConstructor;
@@ -148,7 +147,7 @@ public class MemberService {
 
     // 마이 페이지 수정
     @Transactional
-    public void updateMember(MyPageRequestDto requestDto, String email){
+    public void updateMember(ProfileUpdateRequestDto requestDto, String email){
         Member member = memberRepository.findByEmail(email).orElseThrow(
                 ()-> new ApiRequestException("마이페이지수정에서 멤버 수정하는 아이디찾는거실패")
         );

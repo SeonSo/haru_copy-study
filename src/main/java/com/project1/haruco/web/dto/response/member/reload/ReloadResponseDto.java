@@ -13,7 +13,7 @@ public class ReloadResponseDto {
 
     @Builder
     public ReloadResponseDto(Member member, int challengeCount, int completeChallengeCount){
-        this.userInfo = new MemberResponseDto(Member member, int challengeCount, int completeChallengeCount);
+        this.userInfo = new MemberResponseDto(member, challengeCount, completeChallengeCount);
     }
 
     public static ReloadResponseDto createReloadResponseDto(Member member, int challengeCount, int completeChallengeCount){

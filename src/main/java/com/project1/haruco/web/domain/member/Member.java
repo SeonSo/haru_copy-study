@@ -3,7 +3,7 @@ package com.project1.haruco.web.domain.member;
 import com.project1.haruco.web.domain.certification.Certification;
 import com.project1.haruco.web.domain.commom.Timestamped;
 import com.project1.haruco.web.domain.point.Point;
-import com.project1.haruco.web.dto.request.mypage.MyPageRequestDto;
+import com.project1.haruco.web.dto.request.mypage.ProfileUpdateRequestDto;
 import com.project1.haruco.web.dto.request.signup.SignupRequestDto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -73,7 +73,7 @@ public class Member extends Timestamped {
     }
 
     // 마이페이지 수정
-    public void update(MyPageRequestDto requestDto){
+    public void update(ProfileUpdateRequestDto requestDto){
         this.password = requestDto.getPassword();
         this.nickname = requestDto.getNickname();
         this.profileImg = requestDto.getProfileImg();
