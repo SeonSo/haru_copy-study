@@ -28,10 +28,5 @@ public class CategoryImageService {
                 value -> categoryImageResponseDto.addCategoryImageUrl(value.getCategoryImageUrl()));
         return categoryImageResponseDto;
     }
-
-    @Transactional
-    public void deleteCategoryImage(String imgUrl) {
-        categoryImageRepository.deleteByCategoryImageUrl(imgUrl);
-    }
 }
 

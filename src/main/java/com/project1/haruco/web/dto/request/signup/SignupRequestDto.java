@@ -23,7 +23,7 @@ public class SignupRequestDto {
             throw new ApiRequestException("email(ID)를 입력해주세요");
         }
 
-        // email형식인지 확인하는 정규식 넣기
+        // email 형식인지 확인하는 정규식 넣기
         if(!email.matches("^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*.[a-zA-Z]{2,3}$")){
             throw new ApiRequestException("올바른 이메일 형식이 아닙니다.");
         }

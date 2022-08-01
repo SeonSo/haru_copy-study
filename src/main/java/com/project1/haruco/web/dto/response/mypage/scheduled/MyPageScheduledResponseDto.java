@@ -1,5 +1,6 @@
-package com.project1.haruco.web.dto.response.mypage.end;
+package com.project1.haruco.web.dto.response.mypage.scheduled;
 
+import com.project1.haruco.util.Scheduler;
 import com.project1.haruco.web.domain.member.Member;
 import com.project1.haruco.web.dto.response.mypage.CalculateLevel;
 import lombok.Builder;
@@ -10,17 +11,16 @@ import java.util.List;
 
 @NoArgsConstructor
 @Getter
-public class MyPageEndResponseDto {
-
+public class MyPageScheduledResponseDto {
     private Long memberId;
     private String nickname;
     private String profileImage;
     private Long point;
     private Long level;
-    private List<EndResponseDto> challengeList;
+    private List<ScheduledResponseDto> challengeList;
 
     @Builder
-    public MyPageEndResponseDto(Member member, List<EndResponseDto> challengeList){
+    public MyPageScheduledResponseDto(Member member, List<ScheduledResponseDto> challengeList){
         this.memberId = member.getMemberId();
         this.nickname = member.getNickname();
         this.profileImage = member.getProfileImg();
@@ -29,9 +29,9 @@ public class MyPageEndResponseDto {
         this.level = CalculateLevel.calculateLevel(member.getPoint().getAcquiredPoint());
     }
 
-    public static MyPageEndResponseDto createMyPageEndResponseDto(Member member, List<EndResponseDto> challengeList){
+    public static MyPageScheduledResponseDto createMyPageScheduledResponseDto(Member member, List<ScheduledResponseDto> challengeList){
 
-        return MyPageEndResponseDto.builder()
+        return MyPageScheduledResponseDto.builder()
                 .member(member)
                 .challengeList(challengeList)
                 .build();

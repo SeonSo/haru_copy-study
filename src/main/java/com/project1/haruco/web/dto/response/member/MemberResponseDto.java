@@ -1,6 +1,7 @@
 package com.project1.haruco.web.dto.response.member;
 
 import com.project1.haruco.web.domain.member.Member;
+import com.project1.haruco.web.dto.response.mypage.history.MemberHistoryDto;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -20,7 +21,7 @@ public class MemberResponseDto {
                 this.nickname = member.getNickname();
                 this.profileImg = member.getProfileImg();
                 this.point = member.getPoint().getAcquiredPoint();
-                this.memberLevel = calculLevel(member.getPoint().getAcquiredPoint());
+                this.memberLevel = calculateLevel(member.getPoint().getAcquiredPoint());
 
                 this.challengeCount = challengeCount;
                 this.completeChallengeCount = completeChallengeCount;
@@ -40,7 +41,7 @@ public class MemberResponseDto {
         }
 
         // 699면 5레벨
-        public long calculLevel(Long memberPoint) {
+        public long calculateLevel(Long memberPoint) {
                 long level = 1;
 
                 //100 1~5

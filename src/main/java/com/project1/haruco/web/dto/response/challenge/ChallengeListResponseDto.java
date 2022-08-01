@@ -1,9 +1,6 @@
 package com.project1.haruco.web.dto.response.challenge;
 
-<<<<<<< HEAD
-=======
 import lombok.Builder;
->>>>>>> 3308a580f000088f67fcc06991bf72eac2e3132f
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -13,14 +10,6 @@ import java.util.List;
 @NoArgsConstructor
 @Getter
 public class ChallengeListResponseDto {
-<<<<<<< HEAD
-    private final List<ChallengeResponseDto> result = new ArrayList<>();
-
-    public void addResult(ChallengeResponseDto responseDto) {
-        this.result.add(responseDto);
-    }
-}
-=======
     private List<ChallengeResponseDto> challengeList = new ArrayList<>();
     private boolean hasNext;
 
@@ -37,4 +26,3 @@ public class ChallengeListResponseDto {
                 .build();
     }
 }
->>>>>>> 3308a580f000088f67fcc06991bf72eac2e3132f

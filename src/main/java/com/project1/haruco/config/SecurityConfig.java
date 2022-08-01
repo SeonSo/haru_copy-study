@@ -5,6 +5,7 @@ import com.project1.haruco.security.JwtAuthenticationEntryPoint;
 import com.project1.haruco.security.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -71,18 +72,24 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/member/signup/**").permitAll()
                 .antMatchers("/api/member/login/**").permitAll()
                 .antMatchers("/api/member/reissue").permitAll()
-                .antMatchers("/**").permitAll()
+                .antMatchers("/api/guest/**").permitAll()
+                .antMatchers("/api/category-image/**").permitAll()
+
+                .antMatchers(HttpMethod.GET,"/api/posting/**").permitAll()
+                .antMatchers("/chatting/**").permitAll()
+
+                // 스웨거 접속 풀어주기
+                .antMatchers("/swagger-ui/**").permitAll()
+                .antMatchers("/swagger-resources/**").permitAll()
+                .antMatchers("/v2/api-docs").permitAll()
+                .antMatchers("/webjars").permitAll()
+                .antMatchers("/api/test").permitAll()
+
                 //여기에카카오 요청넣어보기
-
-
                 .anyRequest().authenticated()   // 나머지 API 는 전부 인증 필요
-
-
 
                 // JwtFilter 를 addFilterBefore 로 등록했던 JwtSecurityConfig 클래스를 적용
                 .and()
                 .apply(new JwtSecurityConfig(tokenProvider));
-
-
     }
 }

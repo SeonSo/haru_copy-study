@@ -16,7 +16,7 @@ import javax.persistence.Table;
 public class RefreshToken {
 
     @Id
-    @Column(name="refresh_token_key")
+    @Column(name = "refresh_token_key")
     private String key;
 
     @Column

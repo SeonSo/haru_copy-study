@@ -2,6 +2,7 @@ package com.project1.haruco.web.dto.response.challenge;
 
 import com.project1.haruco.web.domain.challenge.CategoryName;
 import com.project1.haruco.web.domain.challenge.Challenge;
+import com.project1.haruco.web.domain.challengeRecord.ChallengeRecord;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

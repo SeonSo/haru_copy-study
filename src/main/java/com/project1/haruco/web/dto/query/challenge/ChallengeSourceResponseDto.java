@@ -24,7 +24,7 @@ public class ChallengeSourceResponseDto {
     private String tag;
     private Set<Long> challengeMember;
 
-    QueryProjection
+    @QueryProjection
     public ChallengeSourceResponseDto(Challenge challenge, List<ChallengeRecord> records) {
         this.challengeId = challenge.getChallengeId();
         this.challengeTitle = challenge.getChallengeTitle();

@@ -1,4 +1,4 @@
-package com.project1.haruco.web.dto.response.mypage.end;
+package com.project1.haruco.web.dto.response.mypage.history;
 
 import com.project1.haruco.web.domain.member.Member;
 import com.project1.haruco.web.dto.response.mypage.CalculateLevel;
@@ -10,30 +10,29 @@ import java.util.List;
 
 @NoArgsConstructor
 @Getter
-public class MyPageEndResponseDto {
-
+public class MemberHistoryResponseDto {
     private Long memberId;
     private String nickname;
     private String profileImage;
     private Long point;
     private Long level;
-    private List<EndResponseDto> challengeList;
+    private int rank;
+
+    private List<PointHistoryDto> postingGetPoint;
+    private List<PointHistoryDto> challengeGetPoint;
 
     @Builder
-    public MyPageEndResponseDto(Member member, List<EndResponseDto> challengeList){
+    public MemberHistoryResponseDto(Member member,
+                                    List<PointHistoryDto> postingGetPoint,
+                                    List<PointHistoryDto> challengeGetPoint,
+                                    int rank) {
         this.memberId = member.getMemberId();
         this.nickname = member.getNickname();
         this.profileImage = member.getProfileImg();
         this.point = member.getPoint().getAcquiredPoint();
-        this.challengeList = challengeList;
         this.level = CalculateLevel.calculateLevel(member.getPoint().getAcquiredPoint());
-    }
-
-    public static MyPageEndResponseDto createMyPageEndResponseDto(Member member, List<EndResponseDto> challengeList){
-
-        return MyPageEndResponseDto.builder()
-                .member(member)
-                .challengeList(challengeList)
-                .build();
+        this.postingGetPoint = postingGetPoint;
+        this.challengeGetPoint = challengeGetPoint;
+        this.rank = rank;
     }
 }

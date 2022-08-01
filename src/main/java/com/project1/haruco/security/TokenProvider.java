@@ -111,4 +111,8 @@ public class TokenProvider {
             return e.getClaims();
         }
     }
+
+    public String getMemberEmail(String token){
+        return parseClaims(token).getSubject();
+    }
 }

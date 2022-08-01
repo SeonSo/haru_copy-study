@@ -19,7 +19,7 @@ public class ChallengeResponseQueryDto {
     private String memberName; // 챌린지 만든 사람
     private String challengeTitle;
     private String challengeContent;
-    private CategoryName categoryName; // enum
+    private CategoryName categoryName;
     private String challengePassword;
     private LocalDateTime challengeStartDate;
     private LocalDateTime challengeEndDate;
@@ -50,4 +50,5 @@ public class ChallengeResponseQueryDto {
         this.challengeHoliday = challenge.getChallengeHoliday();
         this.challengeMember.addAll(challengeMember);
         this.tag = challenge.getTag();
+    }
 }
