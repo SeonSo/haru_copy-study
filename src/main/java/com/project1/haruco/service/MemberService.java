@@ -2,17 +2,36 @@ package com.project1.haruco.service;
 
 import com.project1.haruco.exception.ApiRequestException;
 import com.project1.haruco.security.TokenProvider;
+import com.project1.haruco.web.domain.challenge.Challenge;
+import com.project1.haruco.web.domain.challengeRecord.ChallengeRecord;
+import com.project1.haruco.web.domain.challengeRecord.ChallengeRecordQueryRepository;
 import com.project1.haruco.web.domain.member.Member;
 import com.project1.haruco.web.domain.member.MemberRepository;
 import com.project1.haruco.web.domain.point.Point;
+import com.project1.haruco.web.domain.point.PointRepository;
+import com.project1.haruco.web.domain.pointHistory.PointHistoryQueryRepository;
+import com.project1.haruco.web.domain.pointHistory.PointHistoryRepository;
 import com.project1.haruco.web.domain.token.RefreshToken;
 import com.project1.haruco.web.domain.token.RefreshTokenRepository;
 import com.project1.haruco.web.dto.request.login.LoginRequestDto;
 import com.project1.haruco.web.dto.request.mypage.ProfileUpdateRequestDto;
+import com.project1.haruco.web.dto.request.mypage.PwUpdateRequestDto;
 import com.project1.haruco.web.dto.request.signup.SignupRequestDto;
+import com.project1.haruco.web.dto.response.member.MemberTokenResponseDto;
+import com.project1.haruco.web.dto.response.member.reload.ReloadResponseDto;
 import com.project1.haruco.web.dto.response.mypage.MyPageResponseDto;
+import com.project1.haruco.web.dto.response.mypage.end.EndResponseDto;
+import com.project1.haruco.web.dto.response.mypage.end.MyPageEndResponseDto;
+import com.project1.haruco.web.dto.response.mypage.history.MemberHistoryDto;
+import com.project1.haruco.web.dto.response.mypage.history.MemberHistoryResponseDto;
+import com.project1.haruco.web.dto.response.mypage.history.PointHistoryDto;
+import com.project1.haruco.web.dto.response.mypage.proceed.MyPageProceedResponseDto;
+import com.project1.haruco.web.dto.response.mypage.proceed.ProceedResponseDto;
+import com.project1.haruco.web.dto.response.mypage.scheduled.MyPageScheduledResponseDto;
+import com.project1.haruco.web.dto.response.mypage.scheduled.ScheduledResponseDto;
 import com.project1.haruco.web.dto.response.token.TokenDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
@@ -20,9 +39,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import static com.project1.haruco.web.dto.response.member.MemberTokenResponseDto.createMemberTokenResponseDto;
+import static com.project1.haruco.web.dto.response.member.reload.ReloadResponseDto.createReloadResponseDto;
+import static com.project1.haruco.web.dto.response.mypage.MyPageResponseDto.createMyPageResponseDto;
+import static com.project1.haruco.web.dto.response.mypage.end.MyPageEndResponseDto.createMyPageEndResponseDto;
+import static com.project1.haruco.web.dto.response.mypage.history.MemberHistoryResponseDto.createMemberHistoryResponseDto;
+import static com.project1.haruco.web.dto.response.mypage.proceed.MyPageProceedResponseDto.createMyPageProceedResponseDto;
+import static com.project1.haruco.web.dto.response.mypage.scheduled.MyPageScheduledResponseDto.createMyPageScheduledResponseDto;
+
+@Slf4j
 @RequiredArgsConstructor
 @Service
 public class MemberService {
@@ -32,6 +60,10 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final TokenProvider tokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final PointRepository pointRepository;
+    private final ChallengeRecordQueryRepository challengeRecordQueryRepository;
+    private final PointHistoryRepository pointHistoryRepository;
+    private final PointHistoryQueryRepository pointHistoryQueryRepository;
 
 
     // 회원가입
@@ -51,27 +83,22 @@ public class MemberService {
         }
 
         // 닉네임 중복확인
-        if(memberRepository.existsByNickname(nickname)){
-            throw  new ApiRequestException("이미 존재하는 닉네임입니다.");
-        }
+        existNickname(nickname);
 
         // 패스워드 인코딩
         String password= passwordEncoder.encode(requestDto.getPassword());
         requestDto.setPassword(password);
 
+        Point point = new Point();
+        pointRepository.save(point);
 
-
-        Member member = new Member(requestDto);
-        Point point = new Point(member);
-        member.add(point);
+        Member member = Member.createMember(requestDto, point);
         memberRepository.save(member);
-
     }
-
 
     // 로그인
     @Transactional
-    public TokenDto loginMember(LoginRequestDto requestDto){
+    public MemberTokenResponseDto loginMember(LoginRequestDto requestDto){
 
         // 1. Login ID/PW 를 기반으로 AuthenticationToken 생성
         UsernamePasswordAuthenticationToken authenticationToken = requestDto.toAuthentication();
@@ -91,27 +118,53 @@ public class MemberService {
 
         refreshTokenRepository.save(refreshToken);
 
-        return tokenDto;
+        Member member = getMemberByEmail(requestDto.getEmail());
+
+        // 자기가 참여한 챌린지에서 현재 진행중인리스트
+        List<ChallengeRecord> targetList1 = challengeRecordQueryRepository.findAllByMemberAndStatus(member,1L);
+        List<ChallengeRecord> targetList2 = challengeRecordQueryRepository.findAllByMemberAndStatus(member,2L);
+        // 완료된 챌린지 리스트
+        List<ChallengeRecord> completeList = challengeRecordQueryRepository.findAllByMemberAndProgress(member,3L);
+
+        return createMemberTokenResponseDto(tokenDto, member, targetList1.size() + targetList2.size(), completeList.size());
+    }
+
+    // 새로고침
+    @Transactional(readOnly = true)
+    public ReloadResponseDto reload(String email){
+        Member member = getMemberByEmail(email);
+
+        // 자기가 참여한 챌린지에서 현재 진행중인리스트
+        // 1번과 2번 상태가 겹치는거같음
+        List<ChallengeRecord> targetList1 = challengeRecordQueryRepository.findAllByMemberAndStatus(member,1L);
+        List<ChallengeRecord> targetList2 = challengeRecordQueryRepository.findAllByMemberAndStatus(member,2L);
+
+        // 완료된 챌린지 리스트
+        List<ChallengeRecord> completeList = challengeRecordQueryRepository.findAllByMemberAndProgress(member,3L);
+
+        return createReloadResponseDto(member, targetList1.size() + targetList2.size(), completeList.size());
     }
 
     // 토큰 재발급
     @Transactional
-    public TokenDto reissue(com.project1.haruco.web.dto.request.Token.TokenRequestDto tokenRequestDto) {
+    public MemberTokenResponseDto reissue(com.project1.haruco.web.dto.request.token.TokenRequestDto tokenRequestDto) {
         // 1. Refresh Token 검증
         if (!tokenProvider.validateToken(tokenRequestDto.getRefreshToken())) {
-            throw new RuntimeException("Refresh Token 이 유효하지 않습니다.");
+            throw new ApiRequestException("리프레시 토큰 오류");
         }
 
         // 2. Access Token 에서 Member ID 가져오기
         Authentication authentication = tokenProvider.getAuthentication(tokenRequestDto.getAccessToken());
 
+        Member member = getMemberByEmail(authentication.getName());
+
         // 3. 저장소에서 Member ID 를 기반으로 Refresh Token 값 가져옴
         RefreshToken refreshToken = refreshTokenRepository.findByKey(authentication.getName())
-                .orElseThrow(() -> new RuntimeException("로그아웃 된 사용자입니다."));
+                .orElseThrow(() -> new ApiRequestException("리프레시 토큰 오류"));
 
         // 4. Refresh Token 일치하는지 검사
         if (!refreshToken.getValue().equals(tokenRequestDto.getRefreshToken())) {
-            throw new RuntimeException("토큰의 유저 정보가 일치하지 않습니다.");
+            throw new ApiRequestException("리프레시 토큰 오류");
         }
 
         // 5. 새로운 토큰 생성
@@ -121,43 +174,155 @@ public class MemberService {
         RefreshToken newRefreshToken = refreshToken.updateValue(tokenDto.getRefreshToken());
         refreshTokenRepository.save(newRefreshToken);
 
+        // 자기가 참여한 챌린지에서 현재 진행중인리스트
+        List<ChallengeRecord> targetList1 = challengeRecordQueryRepository.findAllByMemberAndStatus(member,1L);
+        List<ChallengeRecord> targetList2 = challengeRecordQueryRepository.findAllByMemberAndStatus(member,2L);
+        // 완료된 챌린지 리스트
+        List<ChallengeRecord> completeList = challengeRecordQueryRepository.findAllByMemberAndProgress(member,3L);
+
         // 토큰 발급
-        return tokenDto;
+        return createMemberTokenResponseDto(tokenDto, member, targetList1.size() + targetList2.size(), completeList.size());
     }
 
-
-    // 마이 페이지 상세
+    // 마이 페이지 비밀번호 수정
     @Transactional
-    public MyPageResponseDto getMypageInfo(String email){
-        Member member = memberRepository.findByEmail(email).orElseThrow(
-                ()-> new ApiRequestException("마이페이지 상세에서 찾는 이메일 존재하지않음")
-        );
+    public void updatePassword(PwUpdateRequestDto requestDto, String email){
+        Member member = getMemberByEmail(email);
 
-        // 오류나면 PointRepository로 해결하기
-        List<Point> pointList = member.getPoints();
-        Long pointSum = 0L;
-        for(int i = 0 ; i< pointList.size(); i++){
-            pointSum =  pointSum + pointList.get(i).getAcquiredPoint();
+        if(!passwordEncoder.matches(requestDto.getCurrentPassword(), member.getPassword())){
+            throw new ApiRequestException("현재 비밀번호가 일치하지 않습니다.");
         }
-        System.out.println("포인트합 적히는지 실험: "+pointSum);
-        MyPageResponseDto responseDto = new MyPageResponseDto(member, pointSum);
-        return responseDto;
+
+        String newPassword = passwordEncoder.encode(requestDto.getNewPassword());
+        requestDto.setNewPassword(newPassword);
+
+        member.updatePassword(requestDto);
     }
 
-
-    // 마이 페이지 수정
+    // 마이 페이지 (이미지 + 닉네임) 수정
     @Transactional
-    public void updateMember(ProfileUpdateRequestDto requestDto, String email){
-        Member member = memberRepository.findByEmail(email).orElseThrow(
-                ()-> new ApiRequestException("마이페이지수정에서 멤버 수정하는 아이디찾는거실패")
+    public String updateProfile(ProfileUpdateRequestDto requestDto, String email){
+
+        Member member = getMemberByEmail(email);
+
+        // 닉네임 중복 처리 닉네임이 달라질경우만 중복확인체크 같은경우는 닉네임변경안하는경우
+        if(!member.getNickname().equals(requestDto.getNickname())){
+            existNickname(requestDto.getNickname());
+        }
+
+        return member.updateProfile(requestDto);
+    }
+
+    // 마이페이지 상세
+    @Transactional(readOnly = true)
+    public MyPageResponseDto getMyPage(String email){
+        Member member = getMemberByEmail(email);
+
+        MemberHistoryResponseDto history = getHistory(member);
+
+        MyPageProceedResponseDto proceed = getProceed(member);
+        MyPageScheduledResponseDto schedule = getScheduled(member);
+        MyPageEndResponseDto end = getEnd(member);
+
+        return createMyPageResponseDto(history, proceed, schedule, end);
+    }
+
+    //마이 페이지 히스토리
+    public MemberHistoryResponseDto getHistory(Member member){
+
+        // 포인트 번호
+        int rank = 1;
+
+        // 포인트 순위
+        List<Point> pointList = pointRepository.findAllByOrderByAcquiredPointDesc();
+
+        for (Point point : pointList) {
+            if (member.getMemberId() == point.getPointId() && member.getPoint().getAcquiredPoint() == point.getAcquiredPoint()) {
+                break;
+            } else {
+                rank++;
+            }
+        }
+
+        // 1. 자기가 얻은 포인트 가져오기
+        List<MemberHistoryDto> memberHistoryListPosting = pointHistoryQueryRepository.findHistoryPosting(member);
+        List<MemberHistoryDto> memberHistoryListChallenge = pointHistoryQueryRepository.findHistoryChallenge(member);
+
+        // 2. 포인트에 관한것만 빼기 원하는정보만 빼기 히스토리에관한것만 따로뺴고
+        List<PointHistoryDto> pointHistoryListP = memberHistoryListPosting.stream()
+                .map(memberHistory -> new PointHistoryDto(memberHistory))
+                .collect(Collectors.toList());
+
+        List<PointHistoryDto> pointHistoryListC = memberHistoryListChallenge.stream()
+                .map(memberHistory -> new PointHistoryDto(memberHistory))
+                .collect(Collectors.toList());
+
+        return createMemberHistoryResponseDto(member, pointHistoryListP, pointHistoryListC, rank);
+    }
+
+    // 진행중인 챌린지
+    public MyPageProceedResponseDto getProceed(Member member){
+        //본인이 참여한 챌린지 기록리스트  1: 진행 예정, 2: 진행 중, 3 : 진행 완료
+        List<ChallengeRecord> targetList = challengeRecordQueryRepository.findAllByMemberAndProgress(member,2L);
+
+        // 본인이 참여한 챌린지 기록리스트 -> 챌린지 가져옴
+        List<Challenge> proceeding = targetList.stream()
+                .map(challengeRecord -> challengeRecord.getChallenge()).collect(Collectors.toList());
+
+
+        // 본인이 참여한 챌린지 리스트 -> 가공
+        List<ChallengeRecord> challengeRecordList= challengeRecordQueryRepository.findAllByChallenge(proceeding);
+        List<ProceedResponseDto> proceedingResult = proceeding.stream()
+                .map(challenge-> new ProceedResponseDto(challenge, challengeRecordList))
+                .collect(Collectors.toList());
+
+        return createMyPageProceedResponseDto(member,member.getPoint().getAcquiredPoint(), proceedingResult);
+    }
+
+    // 예정인 챌린지
+    public MyPageScheduledResponseDto getScheduled(Member member){
+        //본인이 참여한 챌린지 리스트  1: 진행 예정, 2: 진행 중, 3 : 진행 완료
+        List<ChallengeRecord> targetList = challengeRecordQueryRepository.findAllByMemberAndProgress(member,1L);
+
+        List<Challenge> scheduled = targetList.stream()
+                .map(challengeRecord -> challengeRecord.getChallenge()).collect(Collectors.toList());
+
+        List<ChallengeRecord> challengeRecordList= challengeRecordQueryRepository.findAllByChallenge(scheduled);
+        List<ScheduledResponseDto> scheduledList = scheduled.stream()
+                .map(challenge -> new ScheduledResponseDto(challenge, challengeRecordList))
+                .collect(Collectors.toList());
+
+        return createMyPageScheduledResponseDto(member,  scheduledList);
+    }
+
+    // 종료된 챌린지
+    public MyPageEndResponseDto getEnd(Member member){
+        //본인이 참여한 챌린지 리스트  1: 진행 예정, 2: 진행 중, 3 : 진행 완료
+        List<ChallengeRecord> targetList = challengeRecordQueryRepository.findAllByMemberAndProgress(member,3L);
+
+        List<Challenge> end = targetList.stream()
+                .map(challengeRecord -> challengeRecord.getChallenge()).collect(Collectors.toList());
+
+        List<ChallengeRecord> challengeRecordList= challengeRecordQueryRepository.findAllByChallenge(end);
+        List<EndResponseDto> endList = end.stream()
+                .map(challenge -> new EndResponseDto(challenge,challengeRecordList))
+                .collect(Collectors.toList());
+
+        return createMyPageEndResponseDto(member, endList);
+    }
+
+    // 닉네임 중복확인
+    private void existNickname(String nickname){
+        if(memberRepository.existsByNickname(nickname)){
+            throw  new ApiRequestException("이미 존재하는 닉네임입니다.");
+        }
+    }
+
+    // 이메일로 멤버 찾기
+    private Member getMemberByEmail(String email){
+        return memberRepository.findByEmail(email).orElseThrow(
+                () -> new ApiRequestException("멤버를 찾을수없는 이메일입니다.")
         );
-
-        System.out.println("인코드 되기전: "+requestDto.getPassword());
-        String password = passwordEncoder.encode(requestDto.getPassword());
-        requestDto.setPassword(password);
-        System.out.println("인코드된 후: "+requestDto.getPassword());
-
-        member.update(requestDto);
     }
 }
 

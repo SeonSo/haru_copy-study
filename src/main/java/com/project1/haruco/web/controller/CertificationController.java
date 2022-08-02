@@ -18,12 +18,12 @@ public class CertificationController {
     private final CertificationService certificationService;
 
     @PostMapping("")
-    public ResponseEntity<Long> createCertification(
+    public Long createCertification(
             @RequestBody CertificationRequestDto certificationRequestDto,
             @AuthenticationPrincipal UserDetails userDetails){
 
         log.info("certificationRequestDto : {} ",certificationRequestDto);
-        return ResponseEntity.ok().body(certificationService.createCertification(certificationRequestDto,userDetails));
+        return certificationService.createCertification(certificationRequestDto,userDetails);
 
     }
 }

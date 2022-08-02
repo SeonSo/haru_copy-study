@@ -4,5 +4,5 @@ public enum CategoryName {
     EXERCISE,
     STUDY,
     LIVINGHABITS,
-    MONEY
+    NODRINKNOSMOKE, OFFICIAL
 }

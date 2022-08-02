@@ -4,12 +4,17 @@ import com.project1.haruco.web.domain.challenge.CategoryName;
 import com.project1.haruco.web.domain.challenge.Challenge;
 import com.project1.haruco.web.domain.member.Member;
 import com.project1.haruco.web.dto.response.challenge.ChallengeDetailResponseDtoMemberDto;
+import com.project1.haruco.web.dto.response.challenge.QChallengeDetailResponseDtoMemberDto;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+
+import static com.project1.haruco.web.domain.challenge.QChallenge.challenge;
+import static com.project1.haruco.web.domain.challengeRecord.QChallengeRecord.challengeRecord;
 
 @RequiredArgsConstructor
 @Repository
@@ -28,7 +33,7 @@ public class ChallengeRecordQueryRepository {
                 .fetch();
     }
 
-    public List<ChallengeRecord> finfAllByChallengeList(Slice<Challenge> challengeList){
+    public List<ChallengeRecord> findAllByChallengeList(Slice<Challenge> challengeList){
         return queryFactory.select(challengeRecord)
                 .from(challengeRecord)
                 .join(challengeRecord.member).fetchJoin()

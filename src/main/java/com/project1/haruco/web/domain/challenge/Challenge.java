@@ -4,7 +4,6 @@ import com.project1.haruco.web.domain.commom.Timestamped;
 import com.project1.haruco.web.domain.member.Member;
 import com.project1.haruco.web.dto.request.challenge.ChallengeRequestDto;
 import com.project1.haruco.web.dto.request.challenge.PutChallengeRequestDto;
-
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

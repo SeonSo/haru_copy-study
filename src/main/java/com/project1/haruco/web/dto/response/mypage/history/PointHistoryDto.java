@@ -22,7 +22,6 @@ public class PointHistoryDto {
     }
 
     private LocalDate changeLocalDate(LocalDateTime localDateTime){
-
         return localDateTime.toLocalDate();
     }
 }

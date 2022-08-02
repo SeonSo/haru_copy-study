@@ -2,11 +2,18 @@ package com.project1.haruco.web.domain.pointHistory;
 
 import com.project1.haruco.web.domain.member.Member;
 import com.project1.haruco.web.dto.response.mypage.history.MemberHistoryDto;
+import com.project1.haruco.web.dto.response.mypage.history.QMemberHistoryDto;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+
+import static com.project1.haruco.web.domain.challenge.QChallenge.challenge;
+import static com.project1.haruco.web.domain.challengeRecord.QChallengeRecord.challengeRecord;
+import static com.project1.haruco.web.domain.member.QMember.member;
+import static com.project1.haruco.web.domain.pointHistory.QPointHistory.pointHistory;
+import static com.project1.haruco.web.domain.posting.QPosting.posting;
 
 @RequiredArgsConstructor
 @Repository
@@ -51,6 +58,4 @@ public class PointHistoryQueryRepository {
                         pointHistory.status.isTrue())
                 .fetch();
     }
-
-
 }

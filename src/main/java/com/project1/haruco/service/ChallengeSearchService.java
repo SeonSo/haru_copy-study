@@ -17,6 +17,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static com.project1.haruco.web.dto.response.challenge.ChallengeResponseDto.createChallengeResponseDto;
+import static org.springframework.util.CollectionUtils.isEmpty;
+
 @Service
 @RequiredArgsConstructor
 public class ChallengeSearchService {
@@ -31,14 +34,14 @@ public class ChallengeSearchService {
                 .findAllByWord(searchWords.trim(), PageRequest.of(page - 1, SEARCH_SIZE));
 
         Map<Challenge, List<ChallengeRecord>> recordMap = challengeRecordQueryRepository
-                .finfAllByChallengeList(challengeList)
+                .findAllByChallengeList(challengeList)
                 .stream()
                 .collect(Collectors.groupingBy(ChallengeRecord::getChallenge));
         
         return getChallengeListResponseDto(challengeList, recordMap);
     }
 
-    private ChallengeListResponseDto getChallengeBySearch(String word, String categoryName,
+    public ChallengeListResponseDto getChallengeBySearch(String word, String categoryName,
                                                                  int period, int progress, int page) {
         Pageable pageable = PageRequest.of(page - 1, SEARCH_SIZE);
         Slice<Challenge> challengeList = challengeQueryRepository

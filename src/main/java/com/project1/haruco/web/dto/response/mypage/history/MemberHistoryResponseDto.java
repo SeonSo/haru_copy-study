@@ -35,4 +35,17 @@ public class MemberHistoryResponseDto {
         this.challengeGetPoint = challengeGetPoint;
         this.rank = rank;
     }
+
+    public static MemberHistoryResponseDto createMemberHistoryResponseDto(Member member,
+                                                                          List<PointHistoryDto> postingGetPoint,
+                                                                          List<PointHistoryDto> challengeGetPoint,
+                                                                          int rank){
+
+        return MemberHistoryResponseDto.builder()
+                .member(member)
+                .postingGetPoint(postingGetPoint)
+                .challengeGetPoint(challengeGetPoint)
+                .rank(rank)
+                .build();
+    }
 }

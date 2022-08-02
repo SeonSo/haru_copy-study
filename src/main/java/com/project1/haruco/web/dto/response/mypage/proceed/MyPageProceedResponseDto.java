@@ -14,7 +14,7 @@ import java.util.List;
 public class MyPageProceedResponseDto {
     private Long memberId;
     private String nickname;
-    private String profileImage;
+    private String profileImg;
     private Long point;
     private Long level;
     private List<ProceedResponseDto> challengeList;
@@ -23,17 +23,17 @@ public class MyPageProceedResponseDto {
     public MyPageProceedResponseDto(Member member, Long totalPoint, List<ProceedResponseDto> challengeList){
         this.memberId = member.getMemberId();
         this.nickname = member.getNickname();
-        this.profileImage = member.getProfileImg();
+        this.profileImg = member.getProfileImg();
         this.point = totalPoint;
         this.challengeList = challengeList;
         this.level = CalculateLevel.calculateLevel(member.getPoint().getAcquiredPoint());
     }
 
-    public static MyPageScheduledResponseDto createMyPageProceedResponseDto(Member member,
+    public static MyPageProceedResponseDto createMyPageProceedResponseDto(Member member,
                                                                             Long totalPoint,
                                                                             List<ProceedResponseDto> challengeList){
 
-        return MyPageScheduledResponseDto.builder()
+        return MyPageProceedResponseDto.builder()
                 .member(member)
                 .totalPoint(totalPoint)
                 .challengeList(challengeList)

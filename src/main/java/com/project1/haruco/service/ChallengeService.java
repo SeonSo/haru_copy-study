@@ -1,9 +1,12 @@
 package com.project1.haruco.service;
 
+import com.project1.haruco.exception.ApiRequestException;
 import com.project1.haruco.web.domain.challenge.CategoryName;
 import com.project1.haruco.web.domain.challenge.Challenge;
+import com.project1.haruco.web.domain.challenge.ChallengeQueryRepository;
 import com.project1.haruco.web.domain.challenge.ChallengeRepository;
 import com.project1.haruco.web.domain.challengeRecord.ChallengeRecord;
+import com.project1.haruco.web.domain.challengeRecord.ChallengeRecordQueryRepository;
 import com.project1.haruco.web.domain.challengeRecord.ChallengeRecordRepository;
 import com.project1.haruco.web.domain.member.Member;
 import com.project1.haruco.web.domain.member.MemberRepository;
@@ -11,226 +14,182 @@ import com.project1.haruco.web.dto.request.challenge.ChallengeRequestDto;
 import com.project1.haruco.web.dto.request.challenge.PutChallengeRequestDto;
 import com.project1.haruco.web.dto.response.challenge.*;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.project1.haruco.web.domain.challenge.CategoryName.*;
+import static com.project1.haruco.web.domain.challenge.Challenge.createChallenge;
+import static com.project1.haruco.web.domain.challengeRecord.ChallengeRecord.createChallengeRecord;
+import static com.project1.haruco.web.dto.response.challenge.ChallengeDetailResponseDto.createChallengeDetailResponseDto;
+import static com.project1.haruco.web.dto.response.challenge.ChallengeMainResponseDto.createChallengeMainResponseDto;
+import static com.project1.haruco.web.dto.response.challenge.ChallengeSourceResponseDto.createChallengeSourceResponseDto;
+
 @Service
 @RequiredArgsConstructor
 public class ChallengeService {
 
     private final ChallengeRepository challengeRepository;
+    private final ChallengeQueryRepository challengeQueryRepository;
     private final ChallengeRecordRepository challengeRecordRepository;
+    private final ChallengeRecordQueryRepository challengeRecordQueryRepository;
     private final MemberRepository memberRepository;
 
-    public ChallengeResponseDto getChallengeDetail(Long challengeId) {
-        Challenge challenge = challengeRepository.findById(challengeId).orElseThrow(
-                () -> new NullPointerException("존재하지 않은 챌린지id입니다"));
-
-        LocalDateTime currentLocalDateTime = LocalDateTime.now();
-        if (currentLocalDateTime.isBefore(challenge.getChallengeStartDate())) {
-            challenge.setChallengeProgress(1L);
-        } else if (currentLocalDateTime.isBefore(challenge.getChallengeEndDate())) {
-            challenge.setChallengeProgress(2L);
-        } else {
-            challenge.setChallengeProgress(3L);
-        }
-
-        List<Long> challengeMember = new ArrayList<>();
-        challengeRecordRepository.findAllByChallenge(challenge).forEach(
-                value -> challengeMember.add(value.getMember().getMemberId()));
-
-        return new ChallengeResponseDto(challenge, challengeMember);
+    //챌린지 상세
+    public ChallengeDetailResponseDto getChallengeDetail(Long challengeId) {
+        Challenge challenge = challengeChecker(challengeId);
+        List<ChallengeDetailResponseDtoMemberDto> memberList = challengeRecordQueryRepository.findAllByChallengeId(challengeId);
+        return createChallengeDetailResponseDto(challenge, memberList);
     }
 
+    //챌린지 등록
     @Transactional
-    public Map<String, String> deleteChallenge(Long challengeId, String username) {
-        Challenge challenge = challengeRepository.findById(challengeId).orElseThrow(
-                () -> new NullPointerException("존재하지 않은 챌린지id입니다"));
+    public Long postChallenge(ChallengeRequestDto requestDto, String email) {
+        Member member = memberChecker(email);
+        createChallengeException(requestDto, member);
 
-        if (challenge.getMember().getEmail().equals(username)) {
-            throw new IllegalArgumentException("작성자가 아닙니다.");
-        }
-
-        Map<String, String> deleteResultMap = new HashMap<>();
-
-        LocalDateTime currentLocalDateTime = LocalDateTime.now();
-        if (currentLocalDateTime.isBefore(challenge.getChallengeStartDate())) {
-            challenge.setChallengeStatus(false);
-            challenge.setChallengeProgress(3L);
-
-            deleteResultMap.put("msg", "챌린지가 비활성화되었습니다.");
-        } else {
-            deleteResultMap.put("msg", "이미 시작된 챌린지는 삭제할 수 없습니다.");
-        }
-
-        challengeRecordRepository.deleteAllByChallenge(challenge); // 챌린지 참가 기록 삭제
-
-        return deleteResultMap;
-    }
-
-    @Transactional
-    public void createChallenge(ChallengeRequestDto requestDto, String email) {
-        Member member = memberRepository.findByEmail(email)
-                .orElseThrow(() -> new NullPointerException("존재하지 않는 유저입니다."));
-
-        challengeRepository.findAllByMember(member)
-                .stream()
-                .filter(value -> value.getCategoryName() == requestDto.getCategoryName())
-                .forEach(value -> {
-                    throw new IllegalArgumentException("이미 해당 카테고리에 챌린지를 생성한 유저입니다.");
-                });
-
-        Challenge challenge = new Challenge(requestDto, member);
+        //챌린지 생성
+        Challenge challenge = createChallenge(requestDto, member);
         challengeRepository.save(challenge);
-        challengeRecordRepository.save(new ChallengeRecord(challenge, member));
+
+        Long challengeId = challenge.getChallengeId();
+        ChallengeRecord challengeRecord = createChallengeRecord(challenge, member);
+        challengeRecordRepository.save(challengeRecord);
+
+        return challengeId;
     }
 
+    //챌린지 삭제
     @Transactional
-    public void putChallenge(PutChallengeRequestDto requestDto, String username) {
-        Member member = memberRepository.findByEmail(username)
-                .orElseThrow(() -> new NullPointerException("존재하지 않는 유저입니다."));
-        Challenge challenge = challengeRepository.findByChallengeIdAndMember(requestDto.getChallengeId(), member)
-                .orElseThrow(() -> new NullPointerException("존재하지 않는 챌린지입니다."));
+    public void deleteChallenge(Long challengeId, String username) {
+        Challenge challenge = challengeChecker(challengeId);
+        deleteChallengeException(username, challenge);
+
+        List<ChallengeRecord> recordList = challengeRecordRepository.findAllByChallengeAndChallengeRecordStatusTrue(challenge);
+        recordList.forEach(ChallengeRecord::setStatusFalse);
+    }
+
+    //챌린지 수정
+    @Transactional
+    public void putChallenge(PutChallengeRequestDto requestDto, String email) {
+        Member member = memberChecker(email);
+        Challenge challenge = challengeChecker(requestDto.getChallengeId());
+        putChallengeException(member, challenge);
         challenge.putChallenge(requestDto);
     }
 
-    @Transactional
-    public void deleteChallengeByAdmin(Long challengeId) {
-        Challenge challenge = challengeRepository.findById(challengeId)
-                .orElseThrow(() -> new NullPointerException("존재하지 않는 챌린지입니다."));
-        challengeRepository.deleteById(challengeId);
-        challengeRecordRepository.deleteAllByChallenge(challenge);
+    //메인 페이지
+    public ChallengeMainResponseDto getMainPage() {
+        List<ChallengeRecord> records = challengeRecordQueryRepository.findAllByStatusTrue();
+
+        return createChallengeMainResponseDto(
+                sliderCollector(records),
+                popularCollector(records),
+                categoryCollector(EXERCISE, records),
+                categoryCollector(LIVINGHABITS, records),
+                categoryCollector(NODRINKNOSMOKE, records));
     }
 
-    // Guest 메인 페이지
-    public ChallengeGuestMainResponseDto getGuestMainChallengeDetail() {
-        ChallengeGuestMainResponseDto mainRequestDto = new ChallengeGuestMainResponseDto();
-        responseDtoRefactor(mainRequestDto, 0);
-        categoryCollector(EXERCISE).forEach(mainRequestDto::addExercise);
-        categoryCollector(LIVINGHABITS).forEach(mainRequestDto::addLivingHabits);
-        categoryCollector(STUDY).forEach(mainRequestDto::addStudy);
-        categoryCollector(MONEY).forEach(mainRequestDto::addMoney);
-        return mainRequestDto;
+    private List<ChallengeSourceResponseDto> sliderCollector(List<ChallengeRecord> records) {
+        List<Challenge> officialList = challengeQueryRepository.findAllByOfficialChallenge();
+
+        return officialList
+                .stream()
+                .map(c -> createChallengeSourceResponseDto(c, records))
+                .collect(Collectors.toList());
     }
 
-    // Member 메인 페이지
-    public ChallengeMemberMainResponseDto getMemberMainChallengeDetail(String userEmail) {
-        ChallengeMemberMainResponseDto mainRequestDto = new ChallengeMemberMainResponseDto();
-        Member member = memberRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new NullPointerException("존재하지 않는 유저입니다."));
+    private List<ChallengeSourceResponseDto> popularCollector(List<ChallengeRecord> records) {
+        final int POPULAR_SIZE = 4;
 
-        List<ChallengeRecord> myChallengeList = challengeRecordRepository.findAllByMember(member);
+        List<ChallengeRecord> popularRecords = challengeRecordQueryRepository
+                .findAllPopular(PageRequest.of(0, POPULAR_SIZE));
+        return popularRecords
+                .stream()
+                .map(r -> (createChallengeSourceResponseDto(r.getChallenge(), records)))
+                .collect(Collectors.toList());
+    }
 
-        // myList 추가
-        for (ChallengeRecord mine : myChallengeList) {
-            List<Long> myChallengeMemberList = new ArrayList<>();
-            challengeRecordRepository.findAllByChallenge(mine.getChallenge()).forEach(
-                    record -> myChallengeMemberList.add(record.getMember().getMemberId()));
-            mainRequestDto.addMyList(new ChallengeSliderSourceResponseDto(mine.getChallenge(), myChallengeMemberList));
+    private List<ChallengeSourceResponseDto> categoryCollector(CategoryName category, List<ChallengeRecord> records) {
+        final int CATEGORY_SIZE = 3;
+
+        List<Challenge> challenges = records
+                .stream()
+                .map(ChallengeRecord::getChallenge)
+                .filter(challenge -> challenge.getCategoryName().equals(category))
+                .distinct()
+                .limit(CATEGORY_SIZE)
+                .collect(Collectors.toList());
+
+        return challenges
+                .stream()
+                .map(c -> createChallengeSourceResponseDto(c, records))
+                .collect(Collectors.toList());
+    }
+
+    private Challenge challengeChecker(Long challengeId) {
+        return challengeQueryRepository.findById(challengeId)
+                .orElseThrow(() -> new ApiRequestException("존재하지 않는 챌린지입니다"));
+    }
+
+    private void putChallengeException(Member member, Challenge challenge) {
+        if (!challenge.getMember().equals(member)) {
+            throw new ApiRequestException("다른 유저가 만든 챌린지입니다.");
         }
-
-        final int userSliderSize = myChallengeList.size();
-
-        responseDtoRefactor(mainRequestDto, userSliderSize);
-        categoryCollector(EXERCISE).forEach(mainRequestDto::addExercise);
-        categoryCollector(LIVINGHABITS).forEach(mainRequestDto::addLivingHabits);
-        categoryCollector(STUDY).forEach(mainRequestDto::addStudy);
-        categoryCollector(MONEY).forEach(mainRequestDto::addMoney);
-        return mainRequestDto;
+        if (!challenge.getChallengeProgress().equals(1L)) {
+            throw new ApiRequestException("이미 시작되거나 종료된 챌린지입니다.");
+        }
+        if (!challenge.isChallengeStatus()) {
+            throw new ApiRequestException("삭제된 챌린지입니다.");
+        }
     }
 
-    private List<ChallengeSliderSourceResponseDto> categoryCollector(CategoryName categoryName) {
-
-        final int categorySize = 3;
-
-        List<ChallengeSliderSourceResponseDto> returnList = new ArrayList<>();
-
-        Page<Challenge> pagedChallengeList = challengeRepository
-                .findAllByCategoryNameOrderByModifiedAtDesc(categoryName, PageRequest.of(0, categorySize));
-
-        for (Challenge challenge : pagedChallengeList) {
-            List<Long> memberIdList = new ArrayList<>();
-            challengeRecordRepository.findAllByChallenge(challenge)
-                    .forEach(record -> memberIdList.add(record.getMember().getMemberId()));
-            returnList.add(new ChallengeSliderSourceResponseDto(challenge, memberIdList));
-        }
-
-        return returnList;
+    private Member memberChecker(String email) {
+        return memberRepository.findByEmail(email)
+                .orElseThrow(() -> new ApiRequestException("존재하지 않는 유저입니다."));
     }
 
-    private void responseDtoRefactor(ChallengeGuestMainResponseDto mainResponseDto, int minusSize) {
-
-        final int sliderSize = 5;
-
-        HashSet<Long> currentChallengeIdList = new HashSet<>();
-
-        List<ChallengeRecord> recordList = challengeRecordRepository.findAll();
-        recordList.forEach(
-                record -> currentChallengeIdList.add(record.getChallenge().getChallengeId()));
-
-        Map<Long, Integer> popularList = new HashMap<>();
-
-        for (Long challengeId : currentChallengeIdList) {
-            if (!popularList.containsKey(challengeId)) {
-                popularList.put(challengeId, 0);
-            }
-            recordList.stream().filter(record -> record.getChallenge().getChallengeId().equals(challengeId)).forEach(
-                    record -> popularList.put(challengeId, popularList.get(challengeId) + 1));
+    private void deleteChallengeException(String username, Challenge challenge) {
+        if (!challenge.getMember().getEmail().equals(username)) {
+            throw new ApiRequestException("작성자가 아닙니다.");
         }
+        if (LocalDateTime.now().isBefore(challenge.getChallengeStartDate())) {
+            challenge.setChallengeStatusFalse();
+            challenge.updateChallengeProgress(3L);
+        } else {
+            throw new ApiRequestException("이미 시작된 챌린지는 삭제할 수 없습니다.");
+        }
+    }
 
-        List<Long> challengeIdList = new ArrayList<>();
-        Collections.sort(challengeIdList, (value1, value2) -> (popularList.get(value2).compareTo(popularList.get(value1))));
-
-        for (Long id : challengeIdList) {
-            Challenge challenge = challengeRepository.getById(id);
-            List<Long> memberIdList = new ArrayList<>();
-            challengeRecordRepository.findAllByChallenge(challenge).forEach(
-                    record -> memberIdList.add(record.getMember().getMemberId()));
-            ChallengeSliderSourceResponseDto sliderRequestDto =
-                    new ChallengeSliderSourceResponseDto(challenge, memberIdList);
-            mainResponseDto.addPopular(sliderRequestDto);
-            if (mainResponseDto.getPopular().size() > sliderSize - minusSize) {
-                break;
+    private void createChallengeException(ChallengeRequestDto requestDto, Member member) {
+        List<ChallengeRecord> recordList = challengeRecordQueryRepository.findAllByMember(member);
+        if (recordList.size() >= 10) {
+            throw new ApiRequestException("이미 10개의 챌린지에 참가하고 있는 유저입니다.");
+        }
+        if (requestDto.getChallengePassword().length() < 4) {
+            if (!requestDto.getChallengePassword().equals("")) {
+                throw new ApiRequestException("비밀번호는 4자리 이상으로 설정해야합니다.");
             }
         }
-    }
-
-    public List<Challenge> getAllChallenge() {
-        return challengeRepository.findAll();
-    }
-
-    public ChallengeListResponseDto getChallengeByCategoryName(CategoryName categoryName, int page) {
-        final int pageSize = 6;
-
-        Page<Challenge> challengeList = challengeRepository.
-                findAllByCategoryNameOrderByModifiedAtDesc(categoryName, PageRequest.of(page - 1, pageSize));
-        return listResponseDtoSource(challengeList);
-    }
-
-    public ChallengeListResponseDto getChallengeSearchResult(String searchWords, int page) {
-        final int pageSize = 6;
-
-        Page<Challenge> challengeList = challengeRepository.
-                findAllByChallengeTitleContaining(searchWords.trim(), PageRequest.of(page - 1, pageSize));
-        return listResponseDtoSource(challengeList);
-    }
-
-    private ChallengeListResponseDto listResponseDtoSource(Page<Challenge> challengeList) {
-        ChallengeListResponseDto listResponseDto = new ChallengeListResponseDto();
-        for (Challenge challenge : challengeList) {
-            List<Long> memberIdList = new ArrayList<>();
-            challengeRecordRepository.findAllByChallenge(challenge).forEach(
-                    record -> memberIdList.add(record.getMember().getMemberId()));
-            listResponseDto.addResult(new ChallengeResponseDto(challenge, memberIdList));
+        if (!StringUtils.hasText(requestDto.getChallengeTitle())) {
+            throw new ApiRequestException("제목이 없습니다.");
         }
-        return listResponseDto;
+        if (!StringUtils.hasText(requestDto.getChallengeContent())) {
+            throw new ApiRequestException("내용이 없습니다.");
+        }
+        if (!StringUtils.hasText(requestDto.getChallengeImgUrl())) {
+            throw new ApiRequestException("챌린지 이미지가 없습니다.");
+        }
+        if (!StringUtils.hasText(requestDto.getChallengeGood())) {
+            throw new ApiRequestException("좋은 예시가 없습니다.");
+        }
+        if (!StringUtils.hasText(requestDto.getChallengeBad())) {
+            throw new ApiRequestException("나쁜 예시가 없습니다.");
+        }
     }
 }

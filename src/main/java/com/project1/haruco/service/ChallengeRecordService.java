@@ -10,13 +10,12 @@ import com.project1.haruco.web.domain.member.Member;
 import com.project1.haruco.web.domain.member.MemberRepository;
 import com.project1.haruco.web.dto.request.challengeRecord.ChallengeRecordRequestDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import static com.project1.haruco.web.domain.challenge.CategoryName.OFFICIAL;
 
 @Service
 @RequiredArgsConstructor

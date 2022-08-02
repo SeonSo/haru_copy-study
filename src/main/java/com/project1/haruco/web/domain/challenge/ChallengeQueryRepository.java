@@ -1,5 +1,7 @@
 package com.project1.haruco.web.domain.challenge;
 
+import com.project1.haruco.util.RepositoryHelper;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -8,6 +10,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+
+import static com.project1.haruco.web.domain.challenge.QChallenge.challenge;
+import static com.project1.haruco.web.domain.challengeRecord.QChallengeRecord.challengeRecord;
 
 @RequiredArgsConstructor
 @Repository
