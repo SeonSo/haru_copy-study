@@ -1,8 +1,5 @@
 package com.project1.haruco.config;
 
-import com.project1.haruco.security.JwtAccessDeniedHandler;
-import com.project1.haruco.security.JwtAuthenticationEntryPoint;
-import com.project1.haruco.security.TokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpMethod;
@@ -17,9 +14,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
-    private final TokenProvider tokenProvider;
-    private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-    private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
     private final CorsConfig corsConfig;
 
 
@@ -43,29 +37,18 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 // token을 사용하는 방식이기 때문에 csrf를 disable합니다.
                 .addFilter(corsConfig.corsFilter())
 
-
                 // exception handling 할 때 우리가 만든 클래스를 추가
                 .exceptionHandling()
-                .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                .accessDeniedHandler(jwtAccessDeniedHandler)
-
                 .and()
-
-                // jwt 인증입니다. 세션 사용하지 않음
-
-
                 // h2-console 을 위한 설정을 추가
                 .headers()
                 .frameOptions()
                 .sameOrigin()
 
-
                 // 시큐리티는 기본적으로 세션을 사용
                 // 여기서는 세션을 사용하지 않기 때문에 세션 설정을 Stateless 로 설정
                 .and()
-                .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-
+                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 // 로그인, 회원가입 API 는 토큰이 없는 상태에서 요청이 들어오기 때문에 permitAll 설정
                 .and()
                 .authorizeRequests()
@@ -75,7 +58,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/guest/**").permitAll()
                 .antMatchers("/api/category-image/**").permitAll()
 
-                .antMatchers(HttpMethod.GET,"/api/posting/**").permitAll()
+                .antMatchers(HttpMethod.GET, "/api/posting/**").permitAll()
                 .antMatchers("/chatting/**").permitAll()
 
                 // 스웨거 접속 풀어주기
@@ -86,10 +69,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/api/test").permitAll()
 
                 //여기에카카오 요청넣어보기
-                .anyRequest().authenticated()   // 나머지 API 는 전부 인증 필요
-
-                // JwtFilter 를 addFilterBefore 로 등록했던 JwtSecurityConfig 클래스를 적용
-                .and()
-                .apply(new JwtSecurityConfig(tokenProvider));
+                .anyRequest().authenticated();  // 나머지 API 는 전부 인증 필요
     }
 }

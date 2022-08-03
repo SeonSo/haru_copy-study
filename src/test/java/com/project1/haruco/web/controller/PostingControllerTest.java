@@ -1,6 +1,5 @@
 package com.project1.haruco.web.controller;
 
-import com.project1.haruco.config.SecurityConfig;
 import com.project1.haruco.service.PostingService;
 import com.project1.haruco.util.MockSpringSecurityFilter;
 import com.project1.haruco.web.dto.request.posting.PostingCreateRequestDto;

@@ -39,7 +39,6 @@ public class Scheduler {
     private final SchedulerQueryRepository schedulerQueryRepository;
     private final PointRepository pointRepository;
 
-    @Resource(name = "redisTemplate")
     private static final String SCHEDULE_MODE = System.getProperty("schedule.mode");
 
     LocalDateTime today;

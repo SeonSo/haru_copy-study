@@ -1,7 +1,6 @@
 package com.project1.haruco.service;
 
 import com.project1.haruco.exception.ApiRequestException;
-import com.project1.haruco.security.TokenProvider;
 import com.project1.haruco.web.domain.challenge.Challenge;
 import com.project1.haruco.web.domain.challengeRecord.ChallengeRecord;
 import com.project1.haruco.web.domain.challengeRecord.ChallengeRecordQueryRepository;
@@ -10,9 +9,6 @@ import com.project1.haruco.web.domain.member.MemberRepository;
 import com.project1.haruco.web.domain.point.Point;
 import com.project1.haruco.web.domain.point.PointRepository;
 import com.project1.haruco.web.domain.pointHistory.PointHistoryQueryRepository;
-import com.project1.haruco.web.domain.pointHistory.PointHistoryRepository;
-import com.project1.haruco.web.domain.token.RefreshToken;
-import com.project1.haruco.web.domain.token.RefreshTokenRepository;
 import com.project1.haruco.web.dto.request.login.LoginRequestDto;
 import com.project1.haruco.web.dto.request.mypage.ProfileUpdateRequestDto;
 import com.project1.haruco.web.dto.request.mypage.PwUpdateRequestDto;
@@ -29,7 +25,6 @@ import com.project1.haruco.web.dto.response.mypage.proceed.MyPageProceedResponse
 import com.project1.haruco.web.dto.response.mypage.proceed.ProceedResponseDto;
 import com.project1.haruco.web.dto.response.mypage.scheduled.MyPageScheduledResponseDto;
 import com.project1.haruco.web.dto.response.mypage.scheduled.ScheduledResponseDto;
-import com.project1.haruco.web.dto.response.token.TokenDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -58,11 +53,8 @@ public class MemberService {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
-    private final TokenProvider tokenProvider;
-    private final RefreshTokenRepository refreshTokenRepository;
     private final PointRepository pointRepository;
     private final ChallengeRecordQueryRepository challengeRecordQueryRepository;
-    private final PointHistoryRepository pointHistoryRepository;
     private final PointHistoryQueryRepository pointHistoryQueryRepository;
 
 
@@ -107,17 +99,6 @@ public class MemberService {
         //    authenticate 메서드가 실행이 될 때 CustomUserDetailsService 에서 만들었던 loadUserByUsername 메서드가 실행됨
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 
-        // 3. 인증 정보를 기반으로 JWT 토큰 생성
-        TokenDto tokenDto = tokenProvider.generateTokenDto(authentication);
-
-        // 4. RefreshToken 저장
-        RefreshToken refreshToken = RefreshToken.builder()
-                .key(authentication.getName())
-                .value(tokenDto.getRefreshToken())
-                .build();
-
-        refreshTokenRepository.save(refreshToken);
-
         Member member = getMemberByEmail(requestDto.getEmail());
 
         // 자기가 참여한 챌린지에서 현재 진행중인리스트
@@ -126,7 +107,7 @@ public class MemberService {
         // 완료된 챌린지 리스트
         List<ChallengeRecord> completeList = challengeRecordQueryRepository.findAllByMemberAndProgress(member,3L);
 
-        return createMemberTokenResponseDto(tokenDto, member, targetList1.size() + targetList2.size(), completeList.size());
+        return createMemberTokenResponseDto(member, targetList1.size() + targetList2.size(), completeList.size());
     }
 
     // 새로고침
@@ -146,43 +127,6 @@ public class MemberService {
     }
 
     // 토큰 재발급
-    @Transactional
-    public MemberTokenResponseDto reissue(com.project1.haruco.web.dto.request.token.TokenRequestDto tokenRequestDto) {
-        // 1. Refresh Token 검증
-        if (!tokenProvider.validateToken(tokenRequestDto.getRefreshToken())) {
-            throw new ApiRequestException("리프레시 토큰 오류");
-        }
-
-        // 2. Access Token 에서 Member ID 가져오기
-        Authentication authentication = tokenProvider.getAuthentication(tokenRequestDto.getAccessToken());
-
-        Member member = getMemberByEmail(authentication.getName());
-
-        // 3. 저장소에서 Member ID 를 기반으로 Refresh Token 값 가져옴
-        RefreshToken refreshToken = refreshTokenRepository.findByKey(authentication.getName())
-                .orElseThrow(() -> new ApiRequestException("리프레시 토큰 오류"));
-
-        // 4. Refresh Token 일치하는지 검사
-        if (!refreshToken.getValue().equals(tokenRequestDto.getRefreshToken())) {
-            throw new ApiRequestException("리프레시 토큰 오류");
-        }
-
-        // 5. 새로운 토큰 생성
-        TokenDto tokenDto = tokenProvider.generateTokenDto(authentication);
-
-        // 6. 저장소 정보 업데이트
-        RefreshToken newRefreshToken = refreshToken.updateValue(tokenDto.getRefreshToken());
-        refreshTokenRepository.save(newRefreshToken);
-
-        // 자기가 참여한 챌린지에서 현재 진행중인리스트
-        List<ChallengeRecord> targetList1 = challengeRecordQueryRepository.findAllByMemberAndStatus(member,1L);
-        List<ChallengeRecord> targetList2 = challengeRecordQueryRepository.findAllByMemberAndStatus(member,2L);
-        // 완료된 챌린지 리스트
-        List<ChallengeRecord> completeList = challengeRecordQueryRepository.findAllByMemberAndProgress(member,3L);
-
-        // 토큰 발급
-        return createMemberTokenResponseDto(tokenDto, member, targetList1.size() + targetList2.size(), completeList.size());
-    }
 
     // 마이 페이지 비밀번호 수정
     @Transactional

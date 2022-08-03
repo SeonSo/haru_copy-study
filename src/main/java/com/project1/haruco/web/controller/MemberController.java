@@ -5,13 +5,10 @@ import com.project1.haruco.web.dto.request.login.LoginRequestDto;
 import com.project1.haruco.web.dto.request.mypage.ProfileUpdateRequestDto;
 import com.project1.haruco.web.dto.request.mypage.PwUpdateRequestDto;
 import com.project1.haruco.web.dto.request.signup.SignupRequestDto;
-import com.project1.haruco.web.dto.request.token.TokenRequestDto;
 import com.project1.haruco.web.dto.response.member.MemberTokenResponseDto;
 import com.project1.haruco.web.dto.response.member.reload.ReloadResponseDto;
 import com.project1.haruco.web.dto.response.mypage.MyPageResponseDto;
-import com.project1.haruco.web.dto.response.token.TokenDto;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -42,11 +39,6 @@ public class MemberController {
     }
 
     // 재발급
-    @PostMapping("/reissue")
-    public MemberTokenResponseDto reissue(@RequestBody TokenRequestDto tokenRequestDto) {
-        return memberService.reissue(tokenRequestDto);
-    }
-
 
     // 마이 페이지 상세
     @GetMapping("/mypage")
