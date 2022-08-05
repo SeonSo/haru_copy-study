@@ -23,6 +23,7 @@ public class MemberController {
     //회원가입
     @PostMapping("/signup")
     public void registerUser(@RequestBody SignupRequestDto signupRequestDto){
+        System.out.println("입력 들어옴");
         memberService.registMember(signupRequestDto);
     }
 

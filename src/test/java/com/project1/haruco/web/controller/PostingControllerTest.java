@@ -1,5 +1,6 @@
 package com.project1.haruco.web.controller;
 
+import com.project1.haruco.config.SecurityConfig;
 import com.project1.haruco.service.PostingService;
 import com.project1.haruco.util.MockSpringSecurityFilter;
 import com.project1.haruco.web.dto.request.posting.PostingCreateRequestDto;
@@ -29,8 +30,7 @@ import java.util.Collections;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 

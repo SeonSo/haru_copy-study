@@ -12,12 +12,7 @@ public class MockSpringSecurityFilter implements Filter {
     public void init(FilterConfig filterConfig){}
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-
-    }
-
-    @Override
-    public void ddFilter(ServletRequest req, ServletResponse res, FilterChain) throws IOException, ServletException {
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
         SecurityContextHolder.getContext()
                 .setAuthentication((Authentication) ((HttpServletRequest) req).getUserPrincipal());
         chain.doFilter(req, res);
